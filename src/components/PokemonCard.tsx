@@ -1,7 +1,11 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import ImageColors from 'react-native-image-colors'
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Image } from 'react-native';
 import { SimplePokemon } from '../intefaces/PokemonInterfaces';
 import { FadeInImage } from './FadeInImage';
+import { useRef } from 'react';
+import { useNavigation } from '@react-navigation/native';
+
 
 const windowsWidth = Dimensions.get('window').width;
 
@@ -10,13 +14,36 @@ interface Props {
 }
 
 export const PokemonCard = ({pokemon}:Props) => {
+    
+    const [bgColor, setbgColor] = useState('gray')
+    const isMounted = useRef(true)
+    const navigation = useNavigation()
+
+    useEffect(() => {
+        ImageColors.getColors(pokemon.picture, {fallback: 'gray'})
+        .then( colors => {
+           if (colors.platform === 'android') setbgColor(colors.dominant || 'gray')
+
+        })
+
+        return () => {
+            isMounted.current = false;
+        }
+      
+    }, [])
+    
+
   return (
 
     <TouchableOpacity
-        activeOpacity={0.9}>
+        activeOpacity={0.9}
+        onPress = {() => navigation.navigate('PokemonScreen', {
+            simplePokemon: pokemon,
+            color: bgColor})}>
         <View style = {{
             ...styles.cardContainer,
-            width: windowsWidth *0.4
+            width: windowsWidth *0.4,
+            backgroundColor: bgColor  
         }}>
                 <View>
                     <Text style ={styles.name}> 
@@ -45,7 +72,7 @@ export const PokemonCard = ({pokemon}:Props) => {
 const styles = StyleSheet.create({
     cardContainer: {
         marginHorizontal: 20,
-        backgroundColor: 'red',
+        backgroundColor: 'grey',
         height: 120,
         width: 160,
         marginBottom:25,

@@ -6,6 +6,9 @@ import { PokemonCard } from '../components/PokemonCard';
 import { SearchInput } from '../components/SearchInput';
 import { usePokemonSearch } from '../hooks/usePokemonSearch';
 import { style as globalStyles, style } from '../theme/appTheme';
+import { useState, useEffect } from 'react';
+import { SimplePokemon } from '../intefaces/PokemonInterfaces';
+
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -13,6 +16,30 @@ export const SearchScreen = () => {
 
   const {top} = useSafeAreaInsets()
   const {isFetching, simplePokemons}  =usePokemonSearch()
+
+  const [term, setTerm] = useState('')
+  const [pokemonfiltrafos, setPokemonfiltrafos] = useState<SimplePokemon[]>([])
+
+  useEffect(() => {
+    if( term.length === 0){
+      return setPokemonfiltrafos([]);
+    }
+
+    if(isNaN(Number(term))){
+
+      setPokemonfiltrafos(
+        simplePokemons.filter(
+            (poke) => poke.name.toLowerCase().includes(term.toLowerCase()))
+      )
+    }else{
+      const pokemonById =  simplePokemons.find((poke) => poke.id === term)
+      setPokemonfiltrafos(
+       (pokemonById) ? [pokemonById] : []
+      )
+    }
+
+  }, [term])
+  
 
   if(isFetching){
     return <Loading></Loading>
@@ -22,7 +49,9 @@ export const SearchScreen = () => {
     <View style={{
         flex: 1,
         marginHorizontal: 2}}>
+
         <SearchInput
+          onDebounced = {(value) => setTerm(value)}
           style = {{
             position: 'absolute',
             zIndex: 999,
@@ -32,7 +61,7 @@ export const SearchScreen = () => {
           }}></SearchInput>
 
         <FlatList
-          data={simplePokemons}
+          data={pokemonfiltrafos}
           keyExtractor = {(pokemon) => pokemon.id}
           showsHorizontalScrollIndicator={false}
           numColumns = { 2}
@@ -45,7 +74,7 @@ export const SearchScreen = () => {
               marginBottom: top + 20,
               paddingBottom: 10,
               marginTop: top + 40
-              } }>Pokedex</Text>
+              } }>{term}</Text>
           }
 
           renderItem=  {({item }) => ( <PokemonCard pokemon={item}></PokemonCard> )}
